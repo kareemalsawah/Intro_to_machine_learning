@@ -36,7 +36,6 @@
 </div>
 <footer></footer>
 </body>
-<script src="public/js/opencv.js"></script>
 <script src="public/js/draw.js"></script>
 <script src="public/js/helper.js"></script>
 <script>
@@ -147,13 +146,7 @@
         drawPoint(ctx,i,j,heatMapColorforValue(error_value),1);
       }
     }
-    var dst = cv.imread("canvas_1");
-    var crop_rect = new cv.Rect(500, 0, 500, 500);
-    var src = dst.roi(crop_rect);
-    dst = new cv.Mat();
-    var ksize = new cv.Size(1,1);
-    cv.GaussianBlur(src, dst, ksize, 0, 0, cv.BORDER_DEFAULT);
-    error_map_perceptron = new ImageData(new Uint8ClampedArray(dst.data, dst.cols, dst.rows),500);
+    error_map_perceptron = ctx.getImageData(500, 0, 500, 500);
   }
 
   function perceptron_2_draw_text(ctx){
