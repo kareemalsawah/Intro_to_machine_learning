@@ -171,6 +171,7 @@ function findBestLinePerceptron2(){
 var perceptron_2_cursor_down = false;
 function moveCursor(event){
     if (perceptron_2_cursor_down){
+      event.preventDefault();
       var totalOffsetX = 0;
       var totalOffsetY = 0;
       var canvasX = 0;
