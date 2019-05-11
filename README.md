@@ -11,3 +11,7 @@ Current plans (in no particular order):
 * Decision trees
 * SVMs
 * KNNs
+
+<br/>
+
+[You can check the current website design here](https://docs.google.com/document/d/1cByYCMMDgzoL0i9bEDjmjEw0gxpc2jDISD7pW8LX_FA/edit?usp=sharing)
