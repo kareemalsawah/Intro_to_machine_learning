@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Perceptron Weight Space Visualization</title>
+  <link rel = "stylesheet" type = "text/css" href = "public/css/bootstrap.css" />
+   <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+</head>
+<body>
+  <header>The Perceptron Algorithm</header>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-2">
+      </div>
+      <div class="col-lg-8">
+        <p style="color:red;">Mobile support not fully implemented (especially optimization)</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 text-center">
+    <canvas class="text-center" id="canvas_1" width="1000" height="1000"></canvas>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <a class="btn btn-primary" onclick="findBestLinePerceptron2();">Find best line</a>
+      </div>
+    </div>
+    <div class="row" style="margin-top:5vh;">
+      <div class="col-lg-2">
+      </div>
+      <div class="col-lg-8">
+        Well done. What you just did is called gradient descent and is ,arguably, one of the most important algorithm in machine learning. You basically move the current point in weight space to try to reach the minimum error.
+
+      </div>
+    </div>
+</div>
+<footer></footer>
+</body>
+<script src="public/js/draw.js"></script>
+<script src="public/js/helper.js"></script>
+<script>
+  //Setup canvas
+  var canvas_1 = document.getElementById("canvas_1");
+  var heightRatio = 0.5;
+  canvas_1.height = canvas_1.width*heightRatio;
+  var ctx_1 = canvas_1.getContext("2d");
+
+  //Global variables
+  var perceptron_2_points = [
+    [[300,200],[350,100]],
+    [[100,200],[50,300]]];
+  var perceptron_2_line_params = [-1,-50];
+  var perceptron_2_cursor = [700,300];
+  var perceptron_2_seperator_width = 2;
+  var perceptron_2_cursor_radius = 4;
+  var perceptron_2_error = 0;
+  var error_map_perceptron = undefined;
+  var perceptron_2_best_lines = [];
+  var perceptron_2_num_points = 100;
+
+
+  function perceptron_2_generate_random_points(num_points){
+    var class_0 = [];
+    var class_1 = [];
+    for(var i = 0; i < num_points; i++){
+      var new_point = [Math.floor(Math.random()*500),Math.floor(Math.random()*500)];
+      var new_point_class = perceptron_classify_point(new_point,perceptron_2_line_params);
+      if(new_point_class==0){
+        class_0.push(new_point);
+      }else{
+        class_1.push(new_point);
+      }
+    }
+    perceptron_2_points = [];
+    perceptron_2_points.push(class_1);
+    perceptron_2_points.push(class_0);
+  }
+
+  function perceptron_2_drawFrame(){
+    drawBorder(canvas_1,ctx_1,"black",2);
+    drawAxes(ctx_1,250,250,"black",450,450,2);
+    drawPoints(ctx_1,perceptron_2_points[0],"red",3);
+    drawPoints(ctx_1,perceptron_2_points[1],"blue",3);
+    drawLine(canvas_1,ctx_1,perceptron_2_line_params,"black",1);
+
+    drawMiddleSeperator(canvas_1,ctx_1,"black",perceptron_2_seperator_width);
+
+    drawErrorMapPerceptron(ctx_1);
+    drawAxes(ctx_1,750,250,"black",450,450,2);
+    drawPoint(ctx_1,perceptron_2_cursor[0],perceptron_2_cursor[1],"black",perceptron_2_cursor_radius);
+    perceptron_2_draw_text(ctx_1);
+  }
+
+  /*
+  Given a point, classifiy it as either class 1 or 0. Class 1 is above the line while class 0 is below it.
+  */
+  function perceptron_classify_point(point,line_params){
+    var point_new_coord = [0,0];
+    point_new_coord[0] = point[0]-250;
+    point_new_coord[1] = 250-point[1];
+    var point_value = line_params[0]*point_new_coord[0]+line_params[1];
+    if (point_value<point_new_coord[1]){
+      return 1;
+    }else{
+      return 0;
+    }
+  }
+
+  /*
+  Given an array of points and line_params, counts the number of misclassified points
+  Arguments:
+  points_arr: an array of 2 point arrays, the first has class 1, the second has class 0. Each is an array of points
+  line_params: the parameters to use to draw the line. params[0] represents the slope, params[1] represents the y-intercept
+  */
+  function perceptron_evaluate_line(points_arr,line_params){
+    var num_misclassified = 0;
+    for(var i = 0; i < points_arr[0].length; i++){
+      if (!perceptron_classify_point(points_arr[0][i],line_params)){
+        num_misclassified++;
+      }
+    }
+
+    for(var i = 0; i < points_arr[1].length; i++){
+      if (perceptron_classify_point(points_arr[1][i],line_params)){
+        num_misclassified++;
+      }
+    }
+    return num_misclassified;
+  }
+
+  function drawErrorMapPerceptron(ctx){
+    ctx.putImageData(error_map_perceptron, 500, 0);
+  }
+
+  function calculateErrorMapPerceptron(ctx,points_arr){
+    perceptron_2_best_lines = [];
+    var line_params = [0,0];
+    for(var i = 500; i < 1000; i++){
+      for(var j = 0; j < 500; j++){
+        line_params[0] = map(i,500,1000,-5,5);
+        line_params[1] = 250-j;
+        var error_value = perceptron_evaluate_line(points_arr,line_params)/(perceptron_2_num_points*0.75);
+        if (error_value==0){
+          perceptron_2_best_lines.push([i,j]);
+        }
+        drawPoint(ctx,i,j,heatMapColorforValue(error_value),1);
+      }
+    }
+    error_map_perceptron = ctx.getImageData(500, 0, 500, 500);
+  }
+
+  function perceptron_2_draw_text(ctx){
+    ctx.font = "20px Arial";
+    ctx.fillText("w1 :"+Math.floor(perceptron_2_line_params[0]*100)/100, 880, 420);
+    ctx.fillText("w2 :"+Math.floor(perceptron_2_line_params[1]*100)/100, 880, 450);
+    ctx.fillText("Misclassified points :"+Math.floor(perceptron_evaluate_line(perceptron_2_points,perceptron_2_line_params)*100)/100, 780, 480);
+  }
+
+function findBestLinePerceptron2(){
+  var randomIndex = Math.floor(Math.random()*perceptron_2_best_lines.length);
+  var random_line = perceptron_2_best_lines[randomIndex];
+  perceptron_2_cursor = [random_line[0],random_line[1]];
+  perceptron_2_line_params[0] = map(random_line[0],500,1000,-5,5);
+  perceptron_2_line_params[1] = 250-random_line[1];
+  perceptron_2_drawFrame();
+}
+
+
+
+//Touch and mouse events
+var perceptron_2_cursor_down = false;
+function moveCursor(event){
+    if (perceptron_2_cursor_down){
+      var totalOffsetX = 0;
+      var totalOffsetY = 0;
+      var canvasX = 0;
+      var canvasY = 0;
+      var currentElement = canvas_1;
+
+      do{
+          totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
+          totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
+      }
+      while(currentElement = currentElement.offsetParent)
+
+      canvasX = event.pageX - totalOffsetX;
+      canvasY = event.pageY - totalOffsetY;
+
+      var positionInfo = canvas_1.getBoundingClientRect();
+      var height = positionInfo.height;
+      var width = positionInfo.width;
+      canvasX *= canvas_1.width/width;
+      canvasY *= canvas_1.height/height;
+      if(canvasX>canvas_1.width/2+perceptron_2_seperator_width/2+perceptron_2_cursor_radius){
+        perceptron_2_cursor = [canvasX,canvasY];
+        perceptron_2_line_params[0] = map(canvasX,500,1000,-5,5);
+        perceptron_2_line_params[1] = 250-canvasY;
+        perceptron_2_error = perceptron_evaluate_line(perceptron_2_points,perceptron_2_line_params);
+        perceptron_2_drawFrame();
+      }
+    }
+}
+
+function handleCursorDown(event){
+  perceptron_2_cursor_down = true;
+  moveCursor(event);
+}
+function handleCursorUp(event){
+  perceptron_2_cursor_down = false;
+}
+canvas_1.addEventListener("mousedown", handleCursorDown, false);
+document.addEventListener("mouseup", handleCursorUp, false);
+canvas_1.addEventListener("mousemove",moveCursor,false);
+
+canvas_1.addEventListener("touchstart", handleCursorDown, false);
+document.addEventListener("touchend", handleCursorUp, false);
+canvas_1.addEventListener("touchmove",moveCursor,false);
+
+
+//Running functions
+perceptron_2_generate_random_points(perceptron_2_num_points);
+calculateErrorMapPerceptron(ctx_1,perceptron_2_points);
+perceptron_2_drawFrame();
+//calculateErrorMapPerceptron(ctx_1,perceptron_2_points);
+</script>
+<style>
+  #canvas_1{
+    margin-top:4vh;
+      width:80%;
+  }
+
+  img{
+    width:100%;
+    margin-top:5vh;
+    margin-bottom:5vh;
+  }
+
+  header {
+  background-color: #666;
+  padding: 30px;
+  text-align: center;
+  font-size: 35px;
+  color: white;
+  margin-bottom:10vh;
+  }
+
+  footer {
+  background-color: #777;
+  padding: 5vh;
+  text-align: center;
+  color: white;
+  margin-top:10vh;
+  }
+</style>
+</html>

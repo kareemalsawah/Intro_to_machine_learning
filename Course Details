@@ -1,0 +1,92 @@
+Linear Algebra:
+Scalars, Vectors, Matrices, Tensors
+Transpose, Identity, Multiplication, Determinant, Inverse
+Norms
+
+Probability:
+What is probability (sample space, events as subset of outcomes)
+Conditional probabilities
+Random Variables as mapping from sample space to real line
+Expectation, Variance
+Common Discrete and Continuous random variables
+
+Calculus:
+Complete derivatives
+Visualizing in 3d
+Partial derivatives, Gradients (and their directions)
+
+Tools:
+Jupyter
+Numpy:
+  vectors, matrices, tensors
+  multiplication and other operations
+  Masks
+Pandas:
+  read_csv, df, series, common operations, pandas_to_numpy
+Matplotlib:
+  graphing common graphs(line graph, histogram)
+  Project: Saving a song on an image?
+
+Regression vs Classification, Precision Recall Accuracy F1 score
+
+KNN:
+  Explanation
+  Graphs for multiple K
+  Visualize feature space using multiple K
+  MNIST
+  Graph Error as function of K
+  Project: CIFAR-10
+
+Linear Regression:
+  Idea of line of best fit
+  Going higher dimensions
+  Adding more features + kernel trick
+  Overfitting/Underfitting
+  Training, validation, testing
+  Cross validation
+  Project: Self-driving car game + behaviour imitation
+
+  Doing linear regression using GD?
+
+Perceptron:
+  Idea
+  Visualization of classification
+  Training using GD
+  Visualization of training
+  Non-convergence problem
+
+Logistic Regression:
+  Solution to perceptron
+  Visualization of classification space
+  Training using GD
+  Visualization of training
+  Project: Predicting tomorrow rain or not?
+
+Neural network:
+  Using perceptron
+  Multiple Layers
+  Training using GD (calculate formula analytically)
+  Draw NN as graph
+  Use chain rule
+  Generalize to all NNs
+  Project: Fashion MNIST
+
+Pytorch:
+  Intro to pytorch, NNs, dataset/dataloader/transforms, optimizing methods, and criterions
+  Project: CIFAR-100
+
+CNNs:
+  Intro to convolutions
+  Calculating filter size
+  Batch normalization
+  Transfer Learning
+  Project: Dog breed classification
+
+GANs:
+  Transpose convolutions
+  Discriminator Generator idea
+  Project: Human face generation
+
+
+To Discuss Later:
+  Bias Variance Tradeoff

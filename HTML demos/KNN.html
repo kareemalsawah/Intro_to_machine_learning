@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>KNN Visualization</title>
+  <link rel = "stylesheet" type = "text/css" href = "public/css/bootstrap.css" />
+   <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+</head>
+<body>
+  <header>KNN Algorithm</header>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-2">
+      </div>
+      <div class="col-lg-8">
+        <p style="color:red;">Mobile support not fully implemented (especially optimization)</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 text-center">
+    <canvas class="text-center" id="canvas_1" width="1000" height="1000"></canvas>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <a class="btn btn-primary" onclick="findBestLinePerceptron2();">Find best K value</a>
+      </div>
+    </div>
+    <div class="row" style="margin-top:5vh;">
+      <div class="col-lg-2">
+      </div>
+      <div class="col-lg-8">
+        Post-KNN demo to write
+      </div>
+    </div>
+</div>
+<footer></footer>
+</body>
+<script src="public/js/draw.js"></script>
+<script src="public/js/helper.js"></script>
+<script src="public/js/opencv.js"></script>
+<script>
+  //Setup canvas
+  var canvas_1 = document.getElementById("canvas_1");
+  var heightRatio = 1.0;
+  canvas_1.height = canvas_1.width*heightRatio;
+  var ctx_1 = canvas_1.getContext("2d");
+  var POINT_RADIUS = 10;
+  var APPROX_STEP = 3;
+  var num_of_classes = 5;
+  var default_colors = ["rgba(255,0,0,0.5)","rgba(0,0,255,0.5)","rgba(0,255,0,0.5)","rgba(255,255,0,0.5)","rgba(255,0,255,0.5)","rgba(0,0,0,0.5)","rgba(255,165,0,0.5)"];
+  var points = [];
+  var points_y = [];
+  var centroids = [[100,100],[200,100],[500,0],[900,900],[300,600]];
+
+  function generateRandomPoints(num_of_points){
+    for(var i = 0; i < num_of_points; i++){
+      var centroids_KNN = new KNN(centroids,[0,1,2,3,4],1,"Euclidean")
+      var new_point = [Math.floor(Math.random()*1000),Math.floor(Math.random()*1000)];
+      var new_point_label = centroids_KNN.predict(new_point);
+      points.push(new_point);
+      points_y.push(new_point_label);
+    }
+  }
+
+  function blurCanvas(canvas_name){
+  /*  let src = cv.imread(canvas_name);
+    let dst = new cv.Mat();
+    // You can try more different parameters
+    cv.medianBlur(src, dst, 5);
+    cv.medianBlur(dst, src, 5);
+    cv.medianBlur(src, dst, 5);
+    cv.imshow(canvas_name, dst);
+    src.delete(); dst.delete();*/
+  }
+  var KNN_classifier = new KNN(points,points_y,5,"Euclidean");
+  generateRandomPoints(100);
+  drawCanvas();
+
+  function drawCanvas(){
+    drawBorder(canvas_1,ctx_1,"black",5);
+    drawAxes(ctx_1,20,980,"black",1900,1900,4);
+    drawKNNValues();
+    blurCanvas('canvas_1');
+    drawCurrentPoints();
+  }
+
+  function drawCurrentPoints(){
+    for(var i = 0; i < points.length; i++){
+      var point = points[i];
+      var color = default_colors[points_y[i]];
+      drawPoint(ctx_1,point[0],point[1],color,POINT_RADIUS);
+    }
+  }
+
+  function drawKNNValues(){
+    for(var i = 0; i < canvas_1.width; i+= APPROX_STEP){
+      for(var j = 0; j < canvas_1.height; j += APPROX_STEP){
+        var test_point = [i,j];
+        var point_label = KNN_classifier.predict(test_point);
+        var color = default_colors[point_label];
+        drawRect(ctx_1,test_point[0],test_point[1],APPROX_STEP,APPROX_STEP,color);
+      }
+    }
+  }
+
+  function KNN(training_X,training_y,K,distance_measure){
+    this.K = K;
+    this.data_X = training_X;
+    this.data_y = training_y;
+    this.distance_measure = distance_measure;
+
+
+    this.predict = function(x){
+      var distances = [];
+      var indices = [];
+      for(var i = 0; i < this.data_X.length; i++){
+        var distance = 999999;
+        if(this.distance_measure=="Euclidean"){
+          distance = this.compareEuclidean(this.data_X[i],x);
+        }else if(this.distance_measure=="MSE"){
+          distance = this.compareMSE(this.data_X[i],x);
+        }else if(this.distance_measure=="RMSE"){
+          distance = this.compareRMSE(this.data_X[i],x);
+        }else{
+          console.log("Error in KNN, the distance measure "+distance_measure+" is not defined");
+        }
+        distances.push(distance);
+        indices.push(i);
+      }
+
+
+      const sorted_indices = indices
+        .map((item, index) => [distances[index], item]) // add the clickCount to sort by
+        .sort(([count1], [count2]) => count2 - count1) // sort by the clickCount data
+        .map(([, item]) => item);
+      sorted_indices.reverse();
+
+      var neighbor_labels = [];
+      var neighbors_X = [];
+      for(var i = 0; i < this.K; i++){
+        if (i>=this.data_X.length){
+          console.log("Note that K is larger than the number of points in the dataset, this means that the algorithm results in choosing the point that is most present in the whole training dataset.");
+          break;
+        }
+        var neighbor_label = this.data_y[sorted_indices[i]];
+        neighbor_labels.push(neighbor_label);
+        neighbors_X.push(this.data_X[sorted_indices[i]]);
+      }
+
+
+      var get_counts = getCounts(neighbor_labels);
+      var best_labels = get_counts[0];
+      if(best_labels.length>0){
+        var sum_distances = [];
+        for(var i = 0; i < best_labels.length; i++){
+          var label = best_labels[i];
+          var label_distances = 0;
+          for(var j = 0; j < neighbor_labels.length; j++){
+            if(neighbor_labels[j]==label){
+              label_distances += EuclideanDist(x,neighbors_X[j]);
+            }
+          }
+          sum_distances.push(label_distances);
+        }
+
+        var smallest_value = 9999999;
+        var smallest_index = 0;
+        for(var i = 0; i < sum_distances.length; i++){
+          if(sum_distances[i]<smallest_value){
+            smallest_value = sum_distances[i];
+            smallest_index = i;
+          }
+        }
+        return best_labels[smallest_index];
+      }else{
+        return best_labels[0];
+      }
+      /*best_labels = [best_label];
+      var index = 0;
+      var neighbor_labels = neighbor_labels.filter(function(value, index, arr){
+
+          return value!=best_labels[index];
+
+      });
+      while(best_label==best_labels[0] && index<this.K){
+
+      }*/
+      return best_label;
+    }
+
+    this.compareEuclidean = function(x1,x2){
+      var diff = [x2[0]-x1[0],x2[1]-x1[1]];
+      var SSE = diff[0]*diff[0]+diff[1]*diff[1];
+      var EuclideanDistance = Math.sqrt(SSE);
+      return EuclideanDistance;
+    }
+
+    this.compareMSE = function(x1,x2){
+      var diff = [x2[0]-x1[0],x2[1]-x1[1]];
+      var SSE = diff[0]*diff[0]+diff[1]*diff[1];
+      var MSE = SSE/2;
+      return MSE;
+    }
+
+    this.compareRMSE = function(x1,x2){
+      var diff = [x2[0]-x1[0],x2[1]-x1[1]];
+      var SSE = diff[0]*diff[0]+diff[1]*diff[1];
+      var MSE = SSE/2;
+      var RSME = Math.sqrt(MSE);
+      return RMSE;
+    }
+  }
+
+
+</script>
+<style>
+  #canvas_1{
+    margin-top:4vh;
+      width:40%;
+      margin-right: 400px;
+  }
+
+  img{
+    width:100%;
+    margin-top:5vh;
+    margin-bottom:5vh;
+  }
+
+  header {
+  background-color: #666;
+  padding: 30px;
+  text-align: center;
+  font-size: 35px;
+  color: white;
+  margin-bottom:10vh;
+  }
+
+  footer {
+  background-color: #777;
+  padding: 5vh;
+  text-align: center;
+  color: white;
+  margin-top:10vh;
+  }
+</style>
+</html>
